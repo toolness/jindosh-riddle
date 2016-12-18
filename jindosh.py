@@ -77,6 +77,15 @@ class MatrixColumn:
         return self.matrix.axes[axis][self.index]
 
     def __setitem__(self, axis, value):
+        curr_value = self.matrix.axes[axis][self.index]
+        if curr_value is not None:
+            raise AssertionError(
+                'cannot set %s to %s, as it is already %s' % (
+                    axis,
+                    value,
+                    curr_value
+                )
+            )
         self.matrix.axes[axis][self.index] = value
 
 class Matrix:
