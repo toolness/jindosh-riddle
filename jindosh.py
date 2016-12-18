@@ -48,20 +48,6 @@ class SimpleConstraint(ABConstraint):
                 )
         return False
 
-        # if a in matrix.axes[a_axis]:
-        #     index = matrix.axes[a_axis].index(a)
-        #     b_val = matrix.axes[b_axis][index]
-        #     if b_val is None:
-        #         matrix.axes[b_axis][index] = b
-        #         return True
-        #     elif b_val != b:
-        #         raise ConstraintViolationError(
-        #             '%s is %s, so %s should be %s, but it is %s' % (
-        #                 a_axis, a, b_axis, b, b_val
-        #             )
-        #         )
-        # return False
-
 class NeighborConstraint(ABConstraint):
     @staticmethod
     def _apply(matrix, a_axis, a, b_axis, b):
