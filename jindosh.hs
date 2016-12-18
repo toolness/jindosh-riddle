@@ -16,39 +16,34 @@ data Origin = Dunwall | Dabokva | Fraeport | Karnaca | Baleton
 data Position = FarLeft | SecondFromLeft | Center | SecondFromRight | FarRight
   deriving (Show, Eq)
 
-data Person = Person {
-  name :: Maybe Name
-, color :: Maybe Color
-, drink :: Maybe Drink
-, heirloom :: Maybe Heirloom
-, origin :: Maybe Origin
-, position :: Maybe Position
-} deriving (Show, Eq)
+data Property = Name Name | Color Color | Drink Drink | Heirloom Heirloom |
+  Origin Origin | Position Position
+  deriving (Show, Eq)
 
-person = Person {
-  name = Nothing
-, color = Nothing
-, drink = Nothing
-, heirloom = Nothing
-, origin = Nothing
-, position = Nothing
-}
+rule :: Property -> Property -> [(Property, Property)]
 
-simpleRules =
-  [ person { name=Just Contee, color=Just Red }
-  , person { position=Just FarLeft, name=Just Natsiou }
-  , person { position=Just SecondFromLeft, color=Just Green }
-  , person { position=Just Center, drink=Just Beer }
-  , person { drink=Just Wine, color=Just Purple }
-  , person { origin=Just Dabokva, color=Just White }
-  , person { name=Just Winslow, heirloom=Just Diamond }
-  , person { origin=Just Baleton, heirloom=Just Ring }
-  , person { name=Just Finch, drink=Just Absinthe }
-  , person { origin=Just Dunwall, drink=Just Whiskey }
-  , person { name=Just Marcolla, origin=Just Fraeport } ]
+rule a b =
+  [(a, b), (b, a)]
+
+rulebook rules = rules
+
+rules = rulebook (
+  rule (Name Contee) (Color Red) ++
+  rule (Position FarLeft) (Name Natsiou) ++
+  rule (Position SecondFromLeft) (Color Green) ++
+  rule (Position Center) (Drink Beer) ++
+  rule (Drink Wine) (Color Purple) ++
+  rule (Origin Dabokva) (Color White) ++
+  rule (Name Winslow) (Heirloom Diamond) ++
+  rule (Origin Baleton) (Heirloom Ring) ++
+  rule (Name Finch) (Drink Absinthe) ++
+  rule (Origin Dunwall) (Drink Whiskey) ++
+  rule (Name Marcolla) (Origin Fraeport)
+  )
 
 -- "the lady in purple sat left of someone in blue"
--- (so the lady in purple is NOT on the far right seat)
+-- (so the lady in purple is NOT on the far right seat.
+    also not in second from left, or far left. second from right is wearing white, so she can't be in center. )
 
 -- "when one of the dinner guests bragged about her Snuff Tin,
 --  the woman next to her said they were finer in Dabokva, where she lived"
@@ -60,6 +55,10 @@ simpleRules =
 -- "someone else carried a valuable war medal, and when she saw it the
 --  visitor from karnaca next to her almost spilled her neighbor's rum"
 -- (does this mean the karnacan has two neighbors?)
+--   (if so, the karnacan is either at center or second from left, since
+--    the lady from dabovka is second from right.)
+
+--    if the karnacan is second from left: she is wearing green
 
 -- the lady from Dunwall fell onto the guest in the center seat
 -- (so the center seat is NOT from dunwall)
