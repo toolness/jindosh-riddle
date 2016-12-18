@@ -198,7 +198,7 @@ for heirloom in itertools.permutations(axes[HEIRLOOM]):
         matrix = Matrix(
             name=names,
             heirloom=heirloom,
-            position=position
+            position=position,
         )
         try:
             matrix.apply_constraints()
@@ -212,8 +212,20 @@ for matrix in matrices:
     config = [matrix.get_column(name, NAME)[HEIRLOOM] for name in names]
     configs[tuple(config)] = True
 
-    print matrix
+for name in names:
+    print "%10s" % name,
+
+print
+print "-" * 54
+
+configs = configs.keys()
+configs.sort()
+
+for config in configs:
+    for heirloom in config:
+        print "%10s" % heirloom,
     print
 
-print configs.keys()
+print
+
 print "%d total possibilities." % len(configs)
