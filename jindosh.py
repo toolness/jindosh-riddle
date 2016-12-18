@@ -222,16 +222,10 @@ class Matrix:
 
 names = list(axes[NAME])
 matrices = []
+named_matrix = Matrix(name=names)
 
-for heirloom in itertools.permutations(axes[HEIRLOOM]):
-    try:
-        matrix = Matrix(
-            name=names,
-            heirloom=heirloom,
-        )
-    except ConstraintViolationError as e:
-        continue
-    for positioned_matrix in matrix.permute(POSITION):
+for heirloomed_matrix in named_matrix.permute(HEIRLOOM):
+    for positioned_matrix in heirloomed_matrix.permute(POSITION):
         for colored_matrix in positioned_matrix.permute(COLOR):
             for drinked_matrix in colored_matrix.permute(DRINK):
                 for origined_matrix in drinked_matrix.permute(ORIGIN):
