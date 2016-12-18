@@ -16,8 +16,6 @@ axes = {
     POSITION: set((1, 2, 3, 4, 5))
 }
 
-LEN = len(axes[POSITION])
-
 def get_axis(value):
     for axis in axes:
         if value in axes[axis]:
@@ -164,7 +162,7 @@ class Matrix:
             self.axes[kwarg] = list(kwargs[kwarg])
         for axis in axes:
             if axis not in self.axes:
-                self.axes[axis] = [None] * LEN
+                self.axes[axis] = [None] * len(axes[axis])
         self.apply_constraints()
 
     def get_column(self, value, axis=None):
@@ -225,42 +223,23 @@ class Matrix:
             lines.append(' '.join(line))
         return '\n'.join(lines)
 
-names = list(axes[NAME])
-matrices = []
+def solve_riddle():
+    solution = None
+    starting_matrix = Matrix(name=list(axes[NAME]))
 
-starting_matrix = Matrix(name=names)
+    for heirloomed_matrix in starting_matrix.permute(HEIRLOOM):
+        for positioned_matrix in heirloomed_matrix.permute(POSITION):
+            for colored_matrix in positioned_matrix.permute(COLOR):
+                for drinked_matrix in colored_matrix.permute(DRINK):
+                    for final_matrix in drinked_matrix.permute(ORIGIN):
+                        for axis in axes:
+                            if (set(final_matrix.axes[axis]) != axes[axis]):
+                                raise AssertionError(axis)
+                        if solution is not None:
+                            raise AssertionError('multiple solutions found')
+                        solution = final_matrix
 
-for heirloomed_matrix in starting_matrix.permute(HEIRLOOM):
-    for positioned_matrix in heirloomed_matrix.permute(POSITION):
-        for colored_matrix in positioned_matrix.permute(COLOR):
-            for drinked_matrix in colored_matrix.permute(DRINK):
-                for final_matrix in drinked_matrix.permute(ORIGIN):
-                    for axis in axes:
-                        if (set(final_matrix.axes[axis]) != axes[axis]):
-                            raise AssertionError(axis)
-                    matrices.append(final_matrix)
+    print solution
 
-configs = {}
-
-for matrix in matrices:
-    config = [matrix.get_column(name, NAME)[HEIRLOOM] for name in names]
-    configs[tuple(config)] = True
-
-for name in names:
-    print "%10s" % name,
-
-print
-print "-" * 54
-
-configs = configs.keys()
-configs.sort()
-
-for config in configs:
-    for heirloom in config:
-        print "%10s" % heirloom,
-    print
-
-print
-
-print "%d total matrices." % len(matrices)
-print "%d total possibilities." % len(configs)
+if __name__ == '__main__':
+    solve_riddle()
