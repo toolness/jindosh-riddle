@@ -42,15 +42,7 @@ class SimpleConstraint(ABConstraint):
     def _apply(matrix, a_axis, a, b_axis, b):
         col = matrix.get_column(a, a_axis)
         if col:
-            if col[b_axis] is None:
-                col[b_axis] = b
-                return True
-            elif col[b_axis] != b:
-                raise ConstraintViolationError(
-                    '%s is %s, so %s should be %s, but it is %s' % (
-                        a_axis, a, b_axis, b, col[b_axis]
-                    )
-                )
+            return col.set_or_verify(b_axis, b)
         return False
 
 class NeighborConstraint(ABConstraint):
