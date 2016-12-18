@@ -79,6 +79,26 @@ class NeighborConstraint(ABConstraint):
                 return n1 or n2
         return False
 
+class CenterConstraint:
+    def apply(self, matrix):
+        center = matrix.get_column(3, POSITION)
+        if center:
+            if center[ORIGIN] == 'dunwall':
+                raise ConstraintViolationError(
+                    'center position cannot be from dunwall'
+                )
+
+class PurpleBlueConstraint:
+    def apply(self, matrix):
+        purple = matrix.get_column('purple', COLOR)
+        blue = matrix.get_column('blue', COLOR)
+        if purple and blue:
+            if purple[POSITION] and blue[POSITION]:
+                if purple[POSITION] > blue[POSITION]:
+                    raise ConstraintValidationError(
+                        'purple must be left of blue'
+                    )
+
 constraints = [
     SimpleConstraint('contee', 'red'),
     SimpleConstraint(1, 'natsiou'),
@@ -94,6 +114,8 @@ constraints = [
     NeighborConstraint('tin', 'dabokva'),
     NeighborConstraint('medal', 'karnaca'),
     NeighborConstraint('rum', 'karnaca'),
+    CenterConstraint(),
+    PurpleBlueConstraint(),
 ]
 
 class MatrixColumn:
@@ -168,14 +190,30 @@ class Matrix:
             lines.append(' '.join(line))
         return '\n'.join(lines)
 
+names = list(axes[NAME])
+matrices = []
+
 for heirloom in itertools.permutations(axes[HEIRLOOM]):
-    matrix = Matrix(
-        name=list(axes[NAME]),
-        heirloom=heirloom
-    )
-    try:
-        matrix.apply_constraints()
-    except ConstraintViolationError as e:
-        continue
-    print matrix
-    print
+    for position in itertools.permutations(axes[POSITION]):
+        matrix = Matrix(
+            name=names,
+            heirloom=heirloom,
+            position=position
+        )
+        try:
+            matrix.apply_constraints()
+        except ConstraintViolationError as e:
+            continue
+        matrices.append(matrix)
+
+configs = {}
+
+for matrix in matrices:
+    config = [matrix.get_column(name, NAME)[HEIRLOOM] for name in names]
+    configs[tuple(config)] = True
+
+    #print matrix
+    #print
+
+print configs.keys()
+print "%d total possibilities." % len(configs)
