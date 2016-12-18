@@ -1,15 +1,22 @@
 import itertools
 
+NAME = 'name'
+COLOR = 'color'
+DRINK = 'drink'
+HEIRLOOM = 'heirloom'
+ORIGIN = 'origin'
+POSITION = 'position'
+
 axes = {
-    'name': set(('winslow', 'marcolla', 'contee', 'natsiou', 'finch')),
-    'color': set(('red', 'green', 'purple', 'blue', 'white')),
-    'drink': set(('whiskey', 'rum', 'beer', 'absinthe', 'wine')),
-    'heirloom': set(('diamond', 'tin', 'pendant', 'ring', 'medal')),
-    'origin': set(('dunwall', 'dabokva', 'fraeport', 'karnaca', 'baleton')),
-    'position': set((1, 2, 3, 4, 5))
+    NAME: set(('winslow', 'marcolla', 'contee', 'natsiou', 'finch')),
+    COLOR: set(('red', 'green', 'purple', 'blue', 'white')),
+    DRINK: set(('whiskey', 'rum', 'beer', 'absinthe', 'wine')),
+    HEIRLOOM: set(('diamond', 'tin', 'pendant', 'ring', 'medal')),
+    ORIGIN: set(('dunwall', 'dabokva', 'fraeport', 'karnaca', 'baleton')),
+    POSITION: set((1, 2, 3, 4, 5))
 }
 
-LEN = len(axes['name'])
+LEN = len(axes[POSITION])
 
 def get_axis(value):
     for axis in axes:
@@ -49,10 +56,28 @@ class SimpleConstraint(ABConstraint):
         return False
 
 class NeighborConstraint(ABConstraint):
-    @staticmethod
-    def _apply(matrix, a_axis, a, b_axis, b):
-        # TODO
-        pass
+    @classmethod
+    def _apply_to_neighbor(cls, neighbor, other, axis, value):
+        other_val = other[axis]
+        if other_val is not None and other_val != value:
+            return neighbor.set_or_verify(axis, value)
+
+    @classmethod
+    def _apply(cls, matrix, a_axis, a, b_axis, b):
+        col = matrix.get_column(a, a_axis)
+        if col:
+            neighbors = col.get_neighbors()
+            if len(neighbors) == 1:
+                neighbor = neighbors[0]
+                if neighbor[b_axis] is None:
+                    return neighbor.set_or_verify(b_axis, b)
+            elif len(neighbors) == 2:
+                n1 = cls._apply_to_neighbor(neighbors[0], neighbors[1],
+                                            b_axis, b)
+                n2 = cls._apply_to_neighbor(neighbors[1], neighbors[0],
+                                            b_axis, b)
+                return n1 or n2
+        return False
 
 constraints = [
     SimpleConstraint('contee', 'red'),
@@ -65,7 +90,10 @@ constraints = [
     SimpleConstraint('baleton', 'ring'),
     SimpleConstraint('finch', 'absinthe'),
     SimpleConstraint('dunwall', 'whiskey'),
-    SimpleConstraint('marcolla', 'fraeport')
+    SimpleConstraint('marcolla', 'fraeport'),
+    NeighborConstraint('tin', 'dabokva'),
+    NeighborConstraint('medal', 'karnaca'),
+    NeighborConstraint('rum', 'karnaca'),
 ]
 
 class MatrixColumn:
@@ -73,29 +101,46 @@ class MatrixColumn:
         self.matrix = matrix
         self.index = index
 
-    def __getitem__(self, axis):
-        return self.matrix.axes[axis][self.index]
+    def get_neighbors(self):
+        pos = self.matrix.axes[POSITION][self.index]
+        if pos is not None:
+            left = self.matrix.get_column(pos - 1, POSITION)
+            right = self.matrix.get_column(pos + 1, POSITION)
+            return [n for n in [left, right] if n is not None]
+        return []
 
-    def __setitem__(self, axis, value):
+    def set_or_verify(self, axis, value):
         curr_value = self.matrix.axes[axis][self.index]
-        if curr_value is not None:
-            raise AssertionError(
+        if curr_value is None:
+            self.matrix.axes[axis][self.index] = value
+            return True
+        if curr_value != value:
+            raise ConstraintViolationError(
                 'cannot set %s to %s, as it is already %s' % (
                     axis,
                     value,
                     curr_value
                 )
             )
-        self.matrix.axes[axis][self.index] = value
+        return False
+
+    def __getitem__(self, axis):
+        return self.matrix.axes[axis][self.index]
+
+    def __setitem__(self, axis, value):
+        self.set_or_verify(axis, value)
 
 class Matrix:
     def __init__(self, **kwargs):
         self.axes = {}
         for kwarg in kwargs:
-            self.axes[kwarg] = kwargs[kwarg]
+            self.axes[kwarg] = list(kwargs[kwarg])
         for axis in axes:
             if axis not in self.axes:
                 self.axes[axis] = [None] * LEN
+
+    def clone(self):
+        return self.__class__(**self.axes)
 
     def get_column(self, value, axis=None):
         if axis is None:
@@ -123,9 +168,9 @@ class Matrix:
             lines.append(' '.join(line))
         return '\n'.join(lines)
 
-for heirloom in itertools.permutations(axes['heirloom']):
+for heirloom in itertools.permutations(axes[HEIRLOOM]):
     matrix = Matrix(
-        name=list(axes['name']),
+        name=list(axes[NAME]),
         heirloom=heirloom
     )
     try:
