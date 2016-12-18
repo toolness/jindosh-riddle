@@ -94,7 +94,12 @@ class PurpleBlueConstraint:
         blue = matrix.get_column('blue', COLOR)
         if purple and blue:
             if purple[POSITION] and blue[POSITION]:
-                if purple[POSITION] > blue[POSITION]:
+                # The riddle is ambiguous about whether the purple
+                # person must be *immediately* to the left of the 
+                # blue person, or just "to the left of" in general,
+                # but in order to obtain one unique result, we
+                # need to interpret it as *immediately*.
+                if purple[POSITION] != blue[POSITION] - 1:
                     raise ConstraintViolationError(
                         'purple must be left of blue'
                     )
@@ -222,9 +227,10 @@ class Matrix:
 
 names = list(axes[NAME])
 matrices = []
-named_matrix = Matrix(name=names)
 
-for heirloomed_matrix in named_matrix.permute(HEIRLOOM):
+starting_matrix = Matrix(name=names)
+
+for heirloomed_matrix in starting_matrix.permute(HEIRLOOM):
     for positioned_matrix in heirloomed_matrix.permute(POSITION):
         for colored_matrix in positioned_matrix.permute(COLOR):
             for drinked_matrix in colored_matrix.permute(DRINK):
