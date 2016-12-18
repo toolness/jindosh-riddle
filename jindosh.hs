@@ -53,6 +53,9 @@ simpleRules =
 -- "when one of the dinner guests bragged about her Snuff Tin,
 --  the woman next to her said they were finer in Dabokva, where she lived"
 -- (does this mean the snuff tin person has only one neighbor?)
+--   (if so, it's not the far left, b/c then the second-from-left would
+--    be wearing both green AND white which is impossible, so it's far right.
+--    this means second from right is from dabovka and wearing white.)
 
 -- "someone else carried a valuable war medal, and when she saw it the
 --  visitor from karnaca next to her almost spilled her neighbor's rum"
