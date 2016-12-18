@@ -224,16 +224,15 @@ names = list(axes[NAME])
 matrices = []
 
 for heirloom in itertools.permutations(axes[HEIRLOOM]):
-    for position in itertools.permutations(axes[POSITION]):
-        try:
-            matrix = Matrix(
-                name=names,
-                heirloom=heirloom,
-                position=position,
-            )
-        except ConstraintViolationError as e:
-            continue
-        for colored_matrix in matrix.permute(COLOR):
+    try:
+        matrix = Matrix(
+            name=names,
+            heirloom=heirloom,
+        )
+    except ConstraintViolationError as e:
+        continue
+    for positioned_matrix in matrix.permute(POSITION):
+        for colored_matrix in positioned_matrix.permute(COLOR):
             for drinked_matrix in colored_matrix.permute(DRINK):
                 for origined_matrix in drinked_matrix.permute(ORIGIN):
                     matrices.append(origined_matrix)
