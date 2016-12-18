@@ -228,8 +228,11 @@ for heirloomed_matrix in named_matrix.permute(HEIRLOOM):
     for positioned_matrix in heirloomed_matrix.permute(POSITION):
         for colored_matrix in positioned_matrix.permute(COLOR):
             for drinked_matrix in colored_matrix.permute(DRINK):
-                for origined_matrix in drinked_matrix.permute(ORIGIN):
-                    matrices.append(origined_matrix)
+                for final_matrix in drinked_matrix.permute(ORIGIN):
+                    for axis in axes:
+                        if (set(final_matrix.axes[axis]) != axes[axis]):
+                            raise AssertionError(axis)
+                    matrices.append(final_matrix)
 
 configs = {}
 
