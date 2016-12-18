@@ -137,6 +137,14 @@ class MatrixColumn:
     def set_or_verify(self, axis, value):
         curr_value = self.matrix.axes[axis][self.index]
         if curr_value is None:
+            if self.matrix.get_column(value, axis) is not None:
+                raise ConstraintViolationError(
+                    'cannot set %s to %s, as it is '
+                    'already present elsewhere' % (
+                        axis,
+                        value
+                    )
+                )
             self.matrix.axes[axis][self.index] = value
             return True
         if curr_value != value:
@@ -212,6 +220,13 @@ class Matrix:
                 if constraint.apply(self):
                     keep_going = True
 
+    def final_sanity_check(self):
+        for axis in axes:
+            if set(self.axes[axis]) != axes[axis]:
+                raise AssertionError(
+                    'solution %s is invalid: %s' % (axis, self.axes[axis])
+                )
+
     def __str__(self):
         lines = []
         for axis in axes:
@@ -232,14 +247,12 @@ def solve_riddle():
             for colored_matrix in positioned_matrix.permute(COLOR):
                 for drinked_matrix in colored_matrix.permute(DRINK):
                     for final_matrix in drinked_matrix.permute(ORIGIN):
-                        for axis in axes:
-                            if (set(final_matrix.axes[axis]) != axes[axis]):
-                                raise AssertionError(axis)
                         if solution is not None:
                             raise AssertionError('multiple solutions found')
                         solution = final_matrix
 
-    print solution
+    solution.final_sanity_check()
+    return solution
 
 if __name__ == '__main__':
-    solve_riddle()
+    print(solve_riddle())
