@@ -95,7 +95,7 @@ class PurpleBlueConstraint:
         if purple and blue:
             if purple[POSITION] and blue[POSITION]:
                 if purple[POSITION] > blue[POSITION]:
-                    raise ConstraintValidationError(
+                    raise ConstraintViolationError(
                         'purple must be left of blue'
                     )
 
@@ -160,9 +160,7 @@ class Matrix:
         for axis in axes:
             if axis not in self.axes:
                 self.axes[axis] = [None] * LEN
-
-    def clone(self):
-        return self.__class__(**self.axes)
+        self.apply_constraints()
 
     def get_column(self, value, axis=None):
         if axis is None:
@@ -170,6 +168,38 @@ class Matrix:
         if value in self.axes[axis]:
             return MatrixColumn(self, self.axes[axis].index(value))
         return None
+
+    @staticmethod
+    def _apply_permutation(row, unfilled_spots, permutation):
+        row = row[:]
+        for spot, i in zip(unfilled_spots, range(len(permutation))):
+            row[spot] = permutation[i]
+        return row
+
+    def permute(self, axis):
+        all_values = axes[axis]
+        filled_values = set([
+            value for value in self.axes[axis]
+            if value is not None
+        ])
+        unfilled_spots = [
+            i for i in range(len(self.axes[axis]))
+            if self.axes[axis][i] is None
+        ]
+        values_to_permute = all_values.difference(filled_values)
+
+        for permutation in itertools.permutations(values_to_permute):
+            newaxes = self.axes.copy()
+            newaxes[axis] = self._apply_permutation(
+                self.axes[axis],
+                unfilled_spots,
+                permutation
+            )
+            try:
+                matrix = self.__class__(**newaxes)
+            except ConstraintViolationError:
+                continue
+            yield matrix
 
     def apply_constraints(self):
         keep_going = True
@@ -195,16 +225,18 @@ matrices = []
 
 for heirloom in itertools.permutations(axes[HEIRLOOM]):
     for position in itertools.permutations(axes[POSITION]):
-        matrix = Matrix(
-            name=names,
-            heirloom=heirloom,
-            position=position,
-        )
         try:
-            matrix.apply_constraints()
+            matrix = Matrix(
+                name=names,
+                heirloom=heirloom,
+                position=position,
+            )
         except ConstraintViolationError as e:
             continue
-        matrices.append(matrix)
+        for colored_matrix in matrix.permute(COLOR):
+            for drinked_matrix in colored_matrix.permute(DRINK):
+                for origined_matrix in drinked_matrix.permute(ORIGIN):
+                    matrices.append(origined_matrix)
 
 configs = {}
 
@@ -228,4 +260,5 @@ for config in configs:
 
 print
 
+print "%d total matrices." % len(matrices)
 print "%d total possibilities." % len(configs)
