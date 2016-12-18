@@ -212,8 +212,8 @@ for matrix in matrices:
     config = [matrix.get_column(name, NAME)[HEIRLOOM] for name in names]
     configs[tuple(config)] = True
 
-    #print matrix
-    #print
+    print matrix
+    print
 
 print configs.keys()
 print "%d total possibilities." % len(configs)
