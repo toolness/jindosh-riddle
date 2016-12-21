@@ -144,7 +144,12 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , simpleConstraint positionProp SecondFromLeft colorProp Green
               , simpleConstraint positionProp Center drinkProp Beer
               , simpleConstraint drinkProp Wine colorProp Purple
-              , simpleConstraint originProp Dabokva colorProp White ]
+              , simpleConstraint originProp Dabokva colorProp White
+              , simpleConstraint nameProp Winslow heirloomProp Diamond
+              , simpleConstraint originProp Baleton heirloomProp Ring
+              , simpleConstraint nameProp Finch drinkProp Absinthe
+              , simpleConstraint originProp Dunwall drinkProp Whiskey
+              , simpleConstraint nameProp Marcolla originProp Fraeport ]
 
 people :: [Person]
 people = map ((set nameProp) nullPerson) (values nameProp)
