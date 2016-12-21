@@ -69,15 +69,6 @@ class NeighborConstraint(ABConstraint):
                 return n1 or n2
         return False
 
-class CenterConstraint:
-    def apply(self, matrix):
-        center = matrix.get_column(3, POSITION)
-        if center:
-            if center[ORIGIN] == 'dunwall':
-                raise ConstraintViolationError(
-                    'center position cannot be from dunwall'
-                )
-
 class PurpleBlueConstraint:
     def apply(self, matrix):
         purple = matrix.get_column('purple', COLOR)
@@ -109,7 +100,6 @@ constraints = [
     NeighborConstraint('tin', 'dabokva'),
     NeighborConstraint('medal', 'karnaca'),
     NeighborConstraint('rum', 'karnaca'),
-    CenterConstraint(),
     PurpleBlueConstraint(),
 ]
 
