@@ -73,17 +73,33 @@ simpleConstraint aprop a bprop b =
   in
     constraint
 
+applyConstraints :: [Constraint] -> [Person] -> Maybe [Person]
 applyConstraints constraints people =
   let
     applyConstraint constraint people =
       case people of
         Nothing -> Nothing
         Just x -> constraint x
+    nextPeople =
+      foldr applyConstraint (Just people) constraints
   in
-    foldr applyConstraint (Just people) constraints
+    case nextPeople of
+      Nothing -> Nothing
+      Just x -> if x == people
+        -- Nothing changed when we applied the constraints, so
+        -- just return them as-is.
+        then Just people
+        -- Something changed when applying the constraints, so
+        -- keep applying them.
+        else applyConstraints constraints x
 
 constraints :: [Constraint]
 constraints = [ simpleConstraint nameProp Contee colorProp Red ]
 
 people :: [Person]
 people = map ((set nameProp) nullPerson) allNames
+
+-- TODO: Continuously permute people and apply constraints until a
+-- solution is found.
+
+soln = applyConstraints constraints people
