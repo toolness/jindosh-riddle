@@ -1,20 +1,23 @@
+import Data.List
+import Data.Maybe
+
 data Name = Winslow | Marcolla | Contee | Natsiou | Finch
   deriving (Show, Eq, Enum)
 
 data Color = Red | Green | Purple | Blue | White
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 data Drink = Whiskey | Rum | Beer | Absinthe | Wine
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 data Heirloom = Diamond | Tin | Pendant | Ring | Medal
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 data Origin = Dunwall | Dabokva | Fraeport | Karnaca | Baleton
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 data Position = FarLeft | SecondFromLeft | Center | SecondFromRight | FarRight
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 data Person = Person { name :: Maybe Name
                      , color :: Maybe Color
@@ -31,15 +34,36 @@ nullPerson = Person { name=Nothing
                     , origin=Nothing
                     , position=Nothing }
 
-data Property x =Property { get :: Person -> Maybe x
-                          , set :: Person -> x -> Person }
+allValues :: (Enum a) => [a]
+allValues = (enumFrom (toEnum 0))
 
-nameProp = Property { get=name, set=(\p x -> p { name=Just x }) }
-colorProp = Property { get=color, set=(\p x -> p { color=Just x }) }
-drinkProp = Property { get=drink, set=(\p x -> p { drink=Just x }) }
-heirloomProp = Property { get=heirloom, set=(\p x -> p { heirloom=Just x }) }
-originProp = Property { get=origin, set=(\p x -> p { origin=Just x }) }
-positionProp = Property { get=position, set=(\p x -> p { position=Just x }) }
+data Property x =Property { get :: Person -> Maybe x
+                          , set :: Person -> x -> Person
+                          , values :: [x] }
+
+nameProp = Property { get=name
+                    , set=(\p x -> p { name=Just x })
+                    , values=allValues }
+
+colorProp = Property { get=color
+                     , set=(\p x -> p { color=Just x })
+                     , values=allValues}
+
+drinkProp = Property { get=drink
+                     , set=(\p x -> p { drink=Just x })
+                     , values=allValues }
+
+heirloomProp = Property { get=heirloom
+                        , set=(\p x -> p { heirloom=Just x })
+                        , values=allValues }
+
+originProp = Property { get=origin
+                      , set=(\p x -> p { origin=Just x })
+                      , values=allValues }
+
+positionProp = Property { get=position
+                        , set=(\p x -> p { position=Just x })
+                        , values=allValues }
 
 type Constraint = [Person] -> Maybe [Person]
 
@@ -93,13 +117,36 @@ applyConstraints constraints people =
 constraints :: [Constraint]
 constraints = [ simpleConstraint nameProp Contee colorProp Red ]
 
-allValues :: (Enum a) => [a]
-allValues = (enumFrom (toEnum 0))
-
 people :: [Person]
-people = map ((set nameProp) nullPerson) (allValues :: [Name])
+people = map ((set nameProp) nullPerson) (values nameProp)
+
+fillAbsentValues :: Property x -> [Person] -> [x] -> [Person]
+fillAbsentValues prop people propValues =
+  if null people then []
+    else
+      let
+        person = head people
+      in
+        case ((get prop) person) of
+          Nothing -> ((set prop) person (head propValues)):fillAbsentValues prop (tail people) (tail propValues)
+          Just x -> person:fillAbsentValues prop (tail people) propValues
+
+permuteProperty :: (Eq x) => Property x -> [Person] -> [[Person]]
+permuteProperty prop people =
+  let
+    getValue = get prop
+    allValues = values prop
+    currentValues = map getValue people
+    isValueAbsent value =
+      not ((Just value) `elem` currentValues)
+    valuesToPermute =
+      filter isValueAbsent allValues
+  in
+    map (fillAbsentValues prop people) (permutations valuesToPermute)
 
 -- TODO: Continuously permute people and apply constraints until a
 -- solution is found.
 
 soln = applyConstraints constraints people
+
+solnWithPermutedColors = permuteProperty colorProp (fromJust soln)
