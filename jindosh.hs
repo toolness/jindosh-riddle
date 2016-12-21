@@ -31,9 +31,6 @@ nullPerson = Person { name=Nothing
                     , origin=Nothing
                     , position=Nothing }
 
-allNames :: [Name]
-allNames = (enumFrom (toEnum 0 :: Name))
-
 data Property x =Property { get :: Person -> Maybe x
                           , set :: Person -> x -> Person }
 
@@ -96,8 +93,11 @@ applyConstraints constraints people =
 constraints :: [Constraint]
 constraints = [ simpleConstraint nameProp Contee colorProp Red ]
 
+allValues :: (Enum a) => [a]
+allValues = (enumFrom (toEnum 0))
+
 people :: [Person]
-people = map ((set nameProp) nullPerson) allNames
+people = map ((set nameProp) nullPerson) (allValues :: [Name])
 
 -- TODO: Continuously permute people and apply constraints until a
 -- solution is found.
