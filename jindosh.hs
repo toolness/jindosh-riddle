@@ -114,12 +114,6 @@ applyConstraints constraints people =
         -- keep applying them.
         else applyConstraints constraints x
 
-constraints :: [Constraint]
-constraints = [ simpleConstraint nameProp Contee colorProp Red ]
-
-people :: [Person]
-people = map ((set nameProp) nullPerson) (values nameProp)
-
 fillAbsentValues :: Property x -> [Person] -> [x] -> [Person]
 fillAbsentValues prop people propValues =
   if null people then []
@@ -143,6 +137,17 @@ permuteProperty prop people =
       filter isValueAbsent allValues
   in
     map (fillAbsentValues prop people) (permutations valuesToPermute)
+
+constraints :: [Constraint]
+constraints = [ simpleConstraint nameProp Contee colorProp Red
+              , simpleConstraint positionProp FarLeft nameProp Natsiou
+              , simpleConstraint positionProp SecondFromLeft colorProp Green
+              , simpleConstraint positionProp Center drinkProp Beer
+              , simpleConstraint drinkProp Wine colorProp Purple
+              , simpleConstraint originProp Dabokva colorProp White ]
+
+people :: [Person]
+people = map ((set nameProp) nullPerson) (values nameProp)
 
 -- TODO: Continuously permute people and apply constraints until a
 -- solution is found.
