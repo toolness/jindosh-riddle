@@ -319,4 +319,10 @@ displayMany candidates =
       displayMany (tail candidates)
 
 main =
-  print (length solns)
+  do
+    if length solns /= 1 then
+      do
+        displayMany solns
+        printf "WARNING: %d solutions found.\n" (length solns)
+    else
+      display soln
