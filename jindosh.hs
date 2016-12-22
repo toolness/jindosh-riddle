@@ -17,7 +17,7 @@ data Origin = Dunwall | Dabokva | Fraeport | Karnaca | Baleton
   deriving (Show, Eq, Enum)
 
 data Position = FarLeft | SecondFromLeft | Center | SecondFromRight | FarRight
-  deriving (Show, Eq, Enum)
+  deriving (Show, Eq, Enum, Ord)
 
 data Person = Person { name :: Maybe Name
                      , color :: Maybe Color
@@ -94,6 +94,11 @@ simpleConstraint aprop a bprop b =
   in
     constraint
 
+neighborConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
+neighborConstraint aprop a bprop b =
+  -- TODO: Implement this.
+  \x -> Just x
+
 applyConstraints :: [Constraint] -> [Person] -> Maybe [Person]
 applyConstraints constraints people =
   let
@@ -156,7 +161,10 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , simpleConstraint originProp Baleton heirloomProp Ring
               , simpleConstraint nameProp Finch drinkProp Absinthe
               , simpleConstraint originProp Dunwall drinkProp Whiskey
-              , simpleConstraint nameProp Marcolla originProp Fraeport ]
+              , simpleConstraint nameProp Marcolla originProp Fraeport
+              , neighborConstraint heirloomProp Tin originProp Dabokva
+              , neighborConstraint heirloomProp Medal originProp Karnaca
+              , neighborConstraint drinkProp Rum originProp Karnaca ]
 
 people :: [Person]
 people =
