@@ -133,8 +133,22 @@ neighborConstraint aprop a bprop b =
              ((get bprop) neighbor) /= Just b then True else False
       in
         oneWay aprop a bprop b || oneWay bprop b aprop a
+    isViolatedByEitherNeighbor person n1 n2 =
+      let
+        oneWay aprop a bprop b =
+          let
+            bs = catMaybes (map (get bprop) [n1, n2])
+          in
+            if ((get aprop) person) == Just a &&
+               length bs == 2 &&
+               (not (b `elem` bs)) then True else False
+      in
+        oneWay aprop a bprop b || oneWay bprop b aprop a
     isViolatedByNeighbors person neighbors =
-      any (isViolatedByNeighbor person) neighbors
+      if length neighbors == 1 then
+        isViolatedByNeighbor person (head neighbors)
+      else
+        isViolatedByEitherNeighbor person (head neighbors) (neighbors !! 1)
     isViolatedByAnyone people =
       any (\x -> isViolatedByNeighbors x (getNeighbors x people)) people
     constraint people =
