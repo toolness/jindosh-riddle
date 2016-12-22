@@ -1,5 +1,6 @@
 import Data.List
 import Data.Maybe
+import Text.Printf
 
 data Name = Winslow | Marcolla | Contee | Natsiou | Finch
   deriving (Show, Eq, Enum)
@@ -258,6 +259,41 @@ solns =
       (solveForProperty constraints colorProp
         (solveForProperty constraints positionProp
           (solveForProperty constraints heirloomProp [people]))))
+
+display :: [Person] -> IO ()
+display people =
+  let
+    getPropValue prop person =
+      let
+        value = ((get prop) person)
+      in
+        if value == Nothing then "??" else show (fromJust value)
+    displayProp :: (Show x, Eq x) => Property x -> Person -> IO ()
+    displayProp prop person =
+      do
+        printf "%10s " (getPropValue prop person)
+    displayRow prop people =
+      if null people then
+        printf "\n"
+        else
+          do
+            displayProp prop (head people)
+            displayRow prop (tail people)
+  in
+    do
+      displayRow nameProp people
+      displayRow heirloomProp people
+      displayRow drinkProp people
+      displayRow originProp people
+      displayRow positionProp people
+
+displayMany :: [[Person]] -> IO ()
+displayMany candidates =
+  if null candidates then return () else
+    do
+      display (head candidates)
+      printf "\n"
+      displayMany (tail candidates)
 
 main =
   print (length solns)
