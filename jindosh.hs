@@ -94,6 +94,33 @@ simpleConstraint aprop a bprop b =
   in
     constraint
 
+leftOf :: Position -> Position
+leftOf position = pred position
+
+rightOf :: Position -> Position
+rightOf position = succ position
+
+isLeftOf :: Position -> Person -> Bool
+isLeftOf position person =
+  if position == FarLeft then False else
+    (get positionProp) person == Just (leftOf position)
+
+isRightOf :: Position -> Person -> Bool
+isRightOf position person =
+  if position == FarRight then False else
+    (get positionProp) person == Just (rightOf position)
+
+getNeighbors :: Person -> [Person] -> [Person]
+getNeighbors person people =
+  let
+    getPosition x = (get positionProp) x
+    isNeighbor position person =
+      isLeftOf position person || isRightOf position person
+  in
+    case getPosition person of
+      Nothing -> []
+      Just x -> filter (isNeighbor x) people
+
 neighborConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
 neighborConstraint aprop a bprop b =
   -- TODO: Implement this.
