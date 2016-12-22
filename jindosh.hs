@@ -160,20 +160,20 @@ findPerson prop value people =
 leftOfConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
 leftOfConstraint aprop a bprop b =
   let
-    checkPosition personA personB =
+    checkPosition personA personB defaultVal =
       let
         posA = (get positionProp) personA
         posB = (get positionProp) personB
       in
-        if isNothing posA || isNothing posB then Just people else
-          if isLeftOf (fromJust posB) personA then Just people else Nothing
+        if isNothing posA || isNothing posB then defaultVal else
+          if isLeftOf (fromJust posB) personA then defaultVal else Nothing
     constraint people =
       let
         personA = findPerson aprop a people
         personB = findPerson bprop b people
       in
         if isNothing personA || isNothing personB then Just people else
-          checkPosition (fromJust personA) (fromJust personB)
+          checkPosition (fromJust personA) (fromJust personB) (Just people)
   in
     constraint
 
@@ -243,22 +243,30 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , neighborConstraint heirloomProp Tin originProp Dabokva
               , neighborConstraint heirloomProp Medal originProp Karnaca
               , neighborConstraint drinkProp Rum originProp Karnaca
-              , leftOfConstraint colorProp Purple colorProp Blue ]
+              , leftOfConstraint colorProp Purple colorProp Blue
+              ]
 
-people :: [Person]
-people =
+initialPeople :: [Person]
+initialPeople =
   let
-    peopleWithNames = map ((set nameProp) nullPerson) (values nameProp)
+    placedPeople = map ((set positionProp) nullPerson) (values positionProp)
   in
-    (fromJust (applyConstraints constraints peopleWithNames))
+    (fromJust (applyConstraints constraints placedPeople))
 
 solns :: [[Person]]
 solns =
-  solveForProperty constraints originProp
+  (solveForProperty constraints originProp
     (solveForProperty constraints drinkProp
       (solveForProperty constraints colorProp
-        (solveForProperty constraints positionProp
-          (solveForProperty constraints heirloomProp [people]))))
+        (solveForProperty constraints heirloomProp
+          (solveForProperty constraints nameProp [initialPeople])
+        )
+      )
+    )
+  )
+
+soln :: [Person]
+soln = head solns
 
 display :: [Person] -> IO ()
 display people =
@@ -271,7 +279,7 @@ display people =
     displayProp :: (Show x, Eq x) => Property x -> Person -> IO ()
     displayProp prop person =
       do
-        printf "%10s " (getPropValue prop person)
+        printf "%20s " (getPropValue prop person)
     displayRow prop people =
       if null people then
         printf "\n"
@@ -285,6 +293,7 @@ display people =
       displayRow heirloomProp people
       displayRow drinkProp people
       displayRow originProp people
+      displayRow colorProp people
       displayRow positionProp people
 
 displayMany :: [[Person]] -> IO ()
