@@ -123,8 +123,58 @@ getNeighbors person people =
 
 neighborConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
 neighborConstraint aprop a bprop b =
-  -- TODO: Implement this.
-  \x -> Just x
+  let
+    isViolatedByNeighbor person neighbor =
+      let
+        oneWay aprop a bprop b =
+          if ((get aprop) person) == Just a &&
+             ((get bprop) neighbor) /= Nothing &&
+             ((get bprop) neighbor) /= Just b then True else False
+      in
+        oneWay aprop a bprop b || oneWay bprop b aprop a
+    isViolatedByNeighbors person neighbors =
+      any (isViolatedByNeighbor person) neighbors
+    isViolatedByAnyone people =
+      any (\x -> isViolatedByNeighbors x (getNeighbors x people)) people
+    constraint people =
+      if isViolatedByAnyone people then Nothing else
+        -- TODO: Consider deducing values based on this constraint
+        -- to speed things up.
+        Just people
+  in
+    constraint
+
+findPerson :: (Eq x) => Property x -> x -> [Person] -> Maybe Person
+findPerson prop value people =
+  if null people
+    then Nothing
+  else
+    let
+      person = head people
+    in
+      if ((get prop) person) == Just value
+        then Just person
+        else findPerson prop value (tail people)
+
+leftOfConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
+leftOfConstraint aprop a bprop b =
+  let
+    checkPosition personA personB =
+      let
+        posA = (get positionProp) personA
+        posB = (get positionProp) personB
+      in
+        if isNothing posA || isNothing posB then Just people else
+          if isLeftOf (fromJust posB) personA then Just people else Nothing
+    constraint people =
+      let
+        personA = findPerson aprop a people
+        personB = findPerson bprop b people
+      in
+        if isNothing personA || isNothing personB then Just people else
+          checkPosition (fromJust personA) (fromJust personB)
+  in
+    constraint
 
 applyConstraints :: [Constraint] -> [Person] -> Maybe [Person]
 applyConstraints constraints people =
@@ -191,7 +241,8 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , simpleConstraint nameProp Marcolla originProp Fraeport
               , neighborConstraint heirloomProp Tin originProp Dabokva
               , neighborConstraint heirloomProp Medal originProp Karnaca
-              , neighborConstraint drinkProp Rum originProp Karnaca ]
+              , neighborConstraint drinkProp Rum originProp Karnaca
+              , leftOfConstraint colorProp Purple colorProp Blue ]
 
 people :: [Person]
 people =
@@ -200,13 +251,13 @@ people =
   in
     (fromJust (applyConstraints constraints peopleWithNames))
 
--- TODO: Also solve for drink and origin.
-
 solns :: [[Person]]
 solns =
-  solveForProperty constraints colorProp
-    (solveForProperty constraints positionProp
-      (solveForProperty constraints heirloomProp [people]))
+  solveForProperty constraints originProp
+    (solveForProperty constraints drinkProp
+      (solveForProperty constraints colorProp
+        (solveForProperty constraints positionProp
+          (solveForProperty constraints heirloomProp [people]))))
 
 main =
   print (length solns)
