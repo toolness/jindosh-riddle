@@ -279,9 +279,6 @@ solns =
     )
   )
 
-soln :: [Person]
-soln = head solns
-
 display :: [Person] -> IO ()
 display people =
   let
@@ -325,4 +322,4 @@ main =
         displayMany solns
         printf "WARNING: %d solutions found.\n" (length solns)
     else
-      display soln
+      display (head solns)
