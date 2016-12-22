@@ -138,6 +138,13 @@ permuteProperty prop people =
   in
     map (fillAbsentValues prop people) (permutations valuesToPermute)
 
+solveForProperty :: (Eq x) => [Constraint] -> Property x -> [[Person]] -> [[Person]]
+solveForProperty constraints prop candidates =
+  let
+    permutedCandidates = concat (map (permuteProperty prop) candidates)
+  in
+    catMaybes (map (applyConstraints constraints) permutedCandidates)
+
 constraints :: [Constraint]
 constraints = [ simpleConstraint nameProp Contee colorProp Red
               , simpleConstraint positionProp FarLeft nameProp Natsiou
@@ -152,11 +159,19 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , simpleConstraint nameProp Marcolla originProp Fraeport ]
 
 people :: [Person]
-people = map ((set nameProp) nullPerson) (values nameProp)
+people =
+  let
+    peopleWithNames = map ((set nameProp) nullPerson) (values nameProp)
+  in
+    (fromJust (applyConstraints constraints peopleWithNames))
 
--- TODO: Continuously permute people and apply constraints until a
--- solution is found.
+-- TODO: Also solve for drink and origin.
 
-soln = applyConstraints constraints people
+solns :: [[Person]]
+solns =
+  solveForProperty constraints colorProp
+    (solveForProperty constraints positionProp
+      (solveForProperty constraints heirloomProp [people]))
 
-solnWithPermutedColors = permuteProperty colorProp (fromJust soln)
+main =
+  print (length solns)
