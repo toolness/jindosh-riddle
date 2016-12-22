@@ -101,13 +101,15 @@ leftOf position = pred position
 rightOf :: Position -> Position
 rightOf position = succ position
 
-isLeftOf :: Position -> Person -> Bool
-isLeftOf position person =
+type SideOperator = Person -> Position -> Bool
+
+isLeftOf :: SideOperator
+isLeftOf person position =
   if position == FarLeft then False else
     (get positionProp) person == Just (leftOf position)
 
-isRightOf :: Position -> Person -> Bool
-isRightOf position person =
+isRightOf :: SideOperator
+isRightOf person position =
   if position == FarRight then False else
     (get positionProp) person == Just (rightOf position)
 
@@ -116,7 +118,7 @@ getNeighbors person people =
   let
     getPosition x = (get positionProp) x
     isNeighbor position person =
-      isLeftOf position person || isRightOf position person
+      person `isLeftOf` position || person `isRightOf` position
   in
     case getPosition person of
       Nothing -> []
@@ -171,8 +173,8 @@ findPerson prop value people =
         then Just person
         else findPerson prop value (tail people)
 
-leftOfConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
-leftOfConstraint aprop a bprop b =
+sideConstraint :: (Eq x, Eq y) => Property x -> x -> SideOperator -> Property y -> y -> Constraint
+sideConstraint aprop a sideOp bprop b =
   let
     checkPosition personA personB defaultVal =
       let
@@ -180,7 +182,7 @@ leftOfConstraint aprop a bprop b =
         posB = (get positionProp) personB
       in
         if isNothing posA || isNothing posB then defaultVal else
-          if isLeftOf (fromJust posB) personA then defaultVal else Nothing
+          if personA `sideOp` (fromJust posB) then defaultVal else Nothing
     constraint people =
       let
         personA = findPerson aprop a people
@@ -257,7 +259,7 @@ constraints = [ simpleConstraint nameProp Contee colorProp Red
               , neighborConstraint heirloomProp Tin originProp Dabokva
               , neighborConstraint heirloomProp Medal originProp Karnaca
               , neighborConstraint drinkProp Rum originProp Karnaca
-              , leftOfConstraint colorProp Purple colorProp Blue
+              , sideConstraint colorProp Purple isLeftOf colorProp Blue
               ]
 
 initialPeople :: [Person]
