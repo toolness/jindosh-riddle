@@ -1,7 +1,17 @@
+-- This solution to the Jindosh Riddle is probably horrible Haskell,
+-- because I'm only 200 pages into "Haskell Programming from
+-- first principles" (haskellbook.com).
+
 import Data.List
 import Data.Maybe
 import Text.Printf
 
+-- Here we define the various aspects of an individual's persona as
+-- separate types. This may be unnecessary, but after reading
+-- the book's chapters on types and typeclasses, I thought it'd
+-- be nice to get more hands-on experience with types, and also
+-- useful for the compiler to ensure that I hadn't made certain
+-- kinds of mistakes.
 data Name = Winslow | Marcolla | Contee | Natsiou | Finch
   deriving (Show, Eq, Enum)
 
@@ -20,6 +30,8 @@ data Origin = Dunwall | Dabokva | Fraeport | Karnaca | Baleton
 data Position = FarLeft | SecondFromLeft | Center | SecondFromRight | FarRight
   deriving (Show, Eq, Enum, Ord)
 
+-- A Person represents a person in the Jindosh riddle whose various
+-- properties may still be unknown or have a concrete value.
 data Person = Person { name :: Maybe Name
                      , color :: Maybe Color
                      , drink :: Maybe Drink
@@ -35,12 +47,20 @@ nullPerson = Person { name=Nothing
                     , origin=Nothing
                     , position=Nothing }
 
+-- Return a lost of all possible values of an Enum. Haskell's type
+-- inference will figure out which Enum we want the values of.
 allValues :: (Enum a) => [a]
 allValues = (enumFrom (toEnum 0))
 
-data Property x =Property { get :: Person -> Maybe x
-                          , set :: Person -> x -> Person
-                          , values :: [x] }
+-- A Property represents metadata about a particular aspect of a
+-- person.
+--
+-- It seems like Haskell has a concept called "Lenses" which might
+-- do something similar, but its documentation was confusing so I
+-- went this route instead.
+data Property x = Property { get :: Person -> Maybe x
+                           , set :: Person -> x -> Person
+                           , values :: [x] }
 
 nameProp = Property { get=name
                     , set=(\p x -> p { name=Just x })
@@ -66,8 +86,16 @@ positionProp = Property { get=position
                         , set=(\p x -> p { position=Just x })
                         , values=allValues }
 
+-- A Constraint takes a potential solution and returns Nothing if the
+-- solution violates the constraint. Alternatively, it will return the
+-- potential solution, or an alteration of the potential solution based
+-- on inferences made by the constraint logic.
 type Constraint = [Person] -> Maybe [Person]
 
+-- This returns a Constraint stating that a person with Property `aprop`
+-- set to `a` must also have Property `bprop` set to `b`. It will
+-- alter the proposed solution based on inferences made by this
+-- constraint.
 simpleConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
 simpleConstraint aprop a bprop b =
   let
@@ -101,6 +129,8 @@ leftOf position = pred position
 rightOf :: Position -> Position
 rightOf position = succ position
 
+-- A SideOperator is just an infix operator that tells us whether
+-- a person is to the left or right of a particular Position.
 type SideOperator = Person -> Position -> Bool
 
 isLeftOf :: SideOperator
@@ -124,6 +154,8 @@ getNeighbors person people =
       Nothing -> []
       Just x -> filter (isNeighbor x) people
 
+-- This returns a Constraint stating that a person with Property `aprop`
+-- set to `a` must have a neighbor whose Property `bprop` is set to `b`.
 neighborConstraint :: (Eq x, Eq y) => Property x -> x -> Property y -> y -> Constraint
 neighborConstraint aprop a bprop b =
   let
@@ -155,7 +187,7 @@ neighborConstraint aprop a bprop b =
       any (\x -> isViolatedByNeighbors x (getNeighbors x people)) people
     constraint people =
       if isViolatedByAnyone people then Nothing else
-        -- TODO: Consider deducing values based on this constraint
+        -- TODO: Consider inferring values based on this constraint
         -- to speed things up.
         Just people
   in
@@ -173,6 +205,9 @@ findPerson prop value people =
         then Just person
         else findPerson prop value (tail people)
 
+-- This returns a Constraint stating that a person with Property `aprop`
+-- set to `a` must be to the left or right of a person whose
+-- Property `bprop` is set to `b`.
 sideConstraint :: (Eq x, Eq y) => Property x -> x -> SideOperator -> Property y -> y -> Constraint
 sideConstraint aprop a sideOp bprop b =
   let
@@ -193,6 +228,9 @@ sideConstraint aprop a sideOp bprop b =
   in
     constraint
 
+-- Continuously apply Constraints to a potential solution until
+-- a stable state is reached (that is, until none of the Constraints
+-- return a changed solution, or until any Constraint is violated).
 applyConstraints :: [Constraint] -> [Person] -> Maybe [Person]
 applyConstraints constraints people =
   let
@@ -224,6 +262,12 @@ fillAbsentValues prop people propValues =
           Nothing -> ((set prop) person (head propValues)):fillAbsentValues prop (tail people) (tail propValues)
           Just x -> person:fillAbsentValues prop (tail people) propValues
 
+-- This returns a list of potential solutions with any unknown
+-- values along a given Property filled-in.
+--
+-- For instance, if three of five heirlooms have been filled-in, this
+-- will return a list containing the two permutations of the solution
+-- with all heirlooms filled-in.
 permuteProperty :: (Eq x) => Property x -> [Person] -> [[Person]]
 permuteProperty prop people =
   let
@@ -281,6 +325,10 @@ solns =
     )
   )
 
+-- The following display code is super weird because I don't know what
+-- Monads are yet, and things that I thought would work--like
+-- issuing a `printf` in a function called by `map`--mysteriously
+-- don't. Because side effects are bad, I guess? I have no idea.
 display :: [Person] -> IO ()
 display people =
   let
