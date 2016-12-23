@@ -34,4 +34,10 @@ All the programs in this repository are configured to solve the above
 configuration of the riddle, though they can probably be altered to
 solve other configurations.
 
+## License
+
+All code in this repository is licensed under [CC0 1.0 Universal](CC0)
+(public domain).
+
 [Jindosh Riddle]: http://dishonored.wikia.com/wiki/The_Jindosh_Riddle
+[CC0]: https://creativecommons.org/publicdomain/zero/1.0/
