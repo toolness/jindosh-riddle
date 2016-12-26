@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 
+import Solver exposing (..)
 import Display exposing (display)
 import Person exposing (..)
 import Constraint exposing (..)
