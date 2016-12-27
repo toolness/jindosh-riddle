@@ -9,13 +9,19 @@ permutations list =
     without : List x -> x -> List x
     without list item =
       List.filter (\x -> x /= item) list
+    permutationsStartingWith : x -> List (List x)
+    permutationsStartingWith x =
+      List.map (\p -> x :: p) (permutations (without list x))
   in
-    List.map (\x -> x :: (without list x)) list
+    case list of
+      [] -> []
+      [a] -> [[a]]
+      _ -> List.concat (List.map permutationsStartingWith list)
 
 fillAbsentValues : Property x -> List Person -> List x -> List Person
 fillAbsentValues prop people propValues =
   case propValues of
-    [] -> []
+    [] -> people
     propValue::restPropValues ->
       case people of
         [] -> []
@@ -56,5 +62,12 @@ solve constraints =
         Nothing -> []
         Just x -> [x]
   in
-    -- TODO: Solve for other constraints.
-    solveForProperty constraints nameProp initialPeople
+    (solveForProperty constraints originProp
+      (solveForProperty constraints drinkProp
+        (solveForProperty constraints colorProp
+          (solveForProperty constraints heirloomProp
+            (solveForProperty constraints nameProp initialPeople)
+          )
+        )
+      )
+    )

@@ -20,6 +20,10 @@ constraints =
   , simpleConstraint nameProp Finch drinkProp Absinthe
   , simpleConstraint originProp Dunwall drinkProp Whiskey
   , simpleConstraint nameProp Marcolla originProp Fraeport
+  , neighborConstraint heirloomProp Tin originProp Dabokva
+  , neighborConstraint heirloomProp Medal originProp Karnaca
+  , neighborConstraint drinkProp Rum originProp Karnaca
+  , sideConstraint colorProp Purple (<?) colorProp Blue
   ]
 
 main : Html msg
