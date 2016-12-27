@@ -25,8 +25,8 @@ constraints =
 main : Html msg
 main =
   let
-    applied = applyConstraints constraints placedPeople
+    solns = solve constraints
+    liDisplay soln =
+      li [] [display soln]
   in
-    case applied of
-      Nothing -> h1 [] [text "Constraints violated!"]
-      Just people -> display people
+    ol [] (List.map liDisplay solns)
