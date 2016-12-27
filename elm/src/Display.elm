@@ -1,6 +1,6 @@
-module Display exposing (display)
+module Display exposing (display, displayList)
 
-import Html exposing (table, tr, td, text, Html)
+import Html exposing (table, tr, td, ol, li, text, Html)
 import Html.Attributes exposing (style)
 
 import Person exposing (..)
@@ -35,3 +35,11 @@ display people =
       row people .color,
       row people .position
     ]
+
+displayList : List (List Person) -> Html msg
+displayList solns =
+  let
+    liDisplay soln =
+      li [] [display soln]
+  in
+    ol [] (List.map liDisplay solns)

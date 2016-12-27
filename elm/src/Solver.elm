@@ -1,7 +1,7 @@
-module Solver exposing (..)
+module Solver exposing (permutations, solve)
 
 import Person exposing (..)
-import Constraint exposing (..)
+import Constraint exposing (Constraint, applyConstraints)
 
 permutations : List x -> List (List x)
 permutations list =

@@ -1,11 +1,14 @@
-module Main exposing (..)
+module Main exposing (main)
 
-import Html exposing (..)
-
-import Solver exposing (..)
-import Display exposing (display)
 import Person exposing (..)
-import Constraint exposing (..)
+import Solver exposing (solve)
+import Display exposing (displayList)
+import Constraint exposing
+  ( Constraint
+  , simpleConstraint
+  , neighborConstraint
+  , sideConstraint
+  )
 
 constraints : List Constraint
 constraints =
@@ -26,11 +29,5 @@ constraints =
   , sideConstraint colorProp Purple (<?) colorProp Blue
   ]
 
-main : Html msg
 main =
-  let
-    solns = solve constraints
-    liDisplay soln =
-      li [] [display soln]
-  in
-    ol [] (List.map liDisplay solns)
+  displayList (solve constraints)
